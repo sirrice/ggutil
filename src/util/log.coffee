@@ -35,7 +35,7 @@ class util.Log
 
     level
 
-
+  @reset: -> util.Log.loggers = {}
 
   @logger: (logname="", prefix, level=util.Log.ERROR) ->
     prefix = logname unless prefix?

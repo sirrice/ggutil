@@ -9,26 +9,24 @@ class util.Json
       reject = () -> no
     if reject o
       return { type: "rejected" }
-    if o? and 'ggpackage' of o.constructor
-      ret = { type: 'gg', ggpackage: o.constructor.ggpackage }
-      ret.val = o.toJSON()
-    else if _.isFunction o
+
+    if _.isFunction o
       # functions are expected to be pure and not use context
       ret = { type: "function", val: null, props: {} }
       ret.val = o.toString()
       _.each _.keys(o), (k) ->
         path.push k
-        ret.props[k] = util.Util.toJSON(o[k], reject, path)
+        ret.props[k] = util.Json.toJSON(o[k], reject, path)
         path.pop()
     else if _.isArray o
       ret = { type: "array", val: [], props: {} }
       _.each o, (v, idx) ->
         path.push idx
-        ret.val.push util.Util.toJSON(v, reject, path)
+        ret.val.push util.Json.toJSON(v, reject, path)
         path.pop()
       _.each _.reject(_.keys(o), _.isNumber), (k) ->
         path.push k
-        ret.props[k] = util.Util.toJSON(o[k], reject, path)
+        ret.props[k] = util.Json.toJSON(o[k], reject, path)
         path.pop()
     else if _.isDate o
       ret = { type: "date", val: JSON.stringify o }
@@ -36,7 +34,7 @@ class util.Json
       ret = { type: "object", val: {} }
       _.each o, (v,k) ->
         path.push k
-        ret.val[k] = util.Util.toJSON(v, reject, path)
+        ret.val[k] = util.Json.toJSON(v, reject, path)
         path.pop()
     else
       o = null if _.isUndefined(o)
@@ -46,22 +44,19 @@ class util.Json
   @fromJSON: (json) ->
     type = json.type
     switch json.type
-      when 'gg'
-        klass = _.ggklass json.ggpackage
-        klass.fromJSON json.val
       when 'array'
         ret = []
         _.each json.val, (v) ->
-          ret.push util.Util.fromJSON(v)
+          ret.push util.Json.fromJSON(v)
         _.each json.props, (vjson, k) ->
-          ret[k] = util.Util.fromJSON(vjson)
+          ret[k] = util.Json.fromJSON(vjson)
         ret
       when 'date'
         ret = new Date JSON.parse(json.val)
       when 'object'
         ret = {}
         _.each json.val, (v, k) ->
-          ret[k] = util.Util.fromJSON(v)
+          ret[k] = util.Json.fromJSON(v)
         ret
       when 'function'
         try
@@ -69,7 +64,7 @@ class util.Json
         catch err
           throw Error(json.val)
         _.each json.props, (vjson, k) ->
-          ret[k] = util.Util.fromJSON(vjson)
+          ret[k] = util.Json.fromJSON(vjson)
         ret
       when 'rejected'
         null

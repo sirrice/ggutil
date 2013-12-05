@@ -5,8 +5,23 @@ _ = require 'underscore'
 
 
 
-
 class util.Util
+  @printStackTrace: (error) ->
+    err = new Error error
+    try
+      throw err
+    catch err
+      console.log err.stack
+      return err.stack
+
+  # uniformly pick n items from array
+  @sample: (array, n=null) ->
+    return array unless n?
+    blocksize = Math.ceil(array.length / n)
+    nblocks = Math.floor(array.length / blocksize)
+    _.times nblocks, (block) -> array[block*blocksize]
+
+
 
   @hashCode: (s) ->
     f = (a,b)->
@@ -22,10 +37,6 @@ class util.Util
       break unless o?
       o = o[col]
     o
-
-  @ggklass: (ggpackage) ->
-    cmd = "return ('gg' in window)? window.#{ggpackage} : #{ggpackage}"
-    Function(cmd)()
 
   @isValid: (v) -> not(_.isNull(v) or _.isNaN(v) or _.isUndefined(v))
 
@@ -123,9 +134,6 @@ findGood = util.Util.findGood
 findGoodAttr = util.Util.findGoodAttr
 
 _.mixin
-  toJSON: util.Json.toJSON
-  fromJSON: util.Json.fromJSON
-  ggklass: util.Util.ggklass
   isValid: util.Util.isValid
   o2map: util.Util.o2map
   sum: util.Util.sum
@@ -136,12 +144,11 @@ _.mixin
   isType: util.Util.isSubclass
   subSvg: util.Util.subSvg
   repeat: util.Util.repeat
-  #mapToFunction: util.Aesmap.mapToFunction
-  #mappingToFunctions: util.Aesmap.mappingToFunctions
   cross: util.Util.cross
   reach: util.Util.reach
   hashCode: util.Util.hashCode
   dateFromISOString: util.Util.dateFromISOString
+  sample: util.Util.sample
 
   textSize: util.Textsize.textSize
   exSize: util.Textsize.exSize
