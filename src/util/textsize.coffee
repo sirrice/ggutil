@@ -21,6 +21,7 @@ class util.Textsize
       defaultHeights["#{fontSize}pt"] = pixels[idx]
     return defaultHeights
   )()
+
   @exDefault: (fontSize) ->
     size =
       width: util.Textsize._defaultWidths[fontSize] or 10
@@ -28,6 +29,13 @@ class util.Textsize
     size.w = size.width
     size.h = size.height
     size
+
+  @defaultSize: (text, font="12pt") ->
+    defaults = util.Textsize.exDefault font
+    log = util.Textsize.log
+    defaults.width = defaults.w = defaults.width * text.length
+    defaults
+
 
   # @param text the string to compute size of
   # @param opts css attributes
@@ -66,16 +74,8 @@ class util.Textsize
         h: height
       ret
     catch error
-      fontsize =
-        if 'font-size' of opts
-          opts['font-size']
-        else
-          '12pt'
-      defaults = util.Textsize.exDefault fontsize
-      log = util.Textsize.log
-      log.warn "default textsz: #{text}\t#{defaults.w} x #{defaults.h}.  err: #{error}"
-      defaults.width = defaults.w = defaults.width * text.length
-      defaults
+      log.warn "default texts: #{text}\t  err: #{error}"
+      @defaultSize text, opts['font-size']
 
   # @param opts css attributes
   # @return {width: [pixels], height: [pixels]}
@@ -95,12 +95,16 @@ class util.Textsize
   # @param div a dom element selection
   # @param size font-size
   # @param dms bounding box
-  @larger: (div, size, dims) ->
-    div.style['font-size'] = "#{size}pt"
-    [sw, sh] = [div.scrollWidth, div.scrollHeight]
-    @log "larger: #{size}pt: #{[sw, sh]} vs #{dims.w}, #{dims.h}"
-    sw > dims.w or sh > dims.h
-    #sw > div[0].clientWidth or sh > div[0].clientHeight
+  # @param el dom element to update
+  @larger: (text, size, dims, el) ->
+    if el?
+      el.style['font-size'] = "#{size}pt"
+      [sw, sh] = [el.scrollWidth, el.scrollHeight]
+      if sw? and sh?
+        return sw > dims.w or sh > dims.h
+    
+    ds = @defaultSize text, "#{size}pt"
+    ds.w > dims.w or ds.h > dims.h
 
 
   # Search for the largest font size (pt) for text to be contained
@@ -113,12 +117,12 @@ class util.Textsize
   # @return integer of font point size
   @fontSize: (text, width, height, opts, el) ->
     css =
-       color: "white"
        "font-family": "arial"
     _.extend css, opts
     _.extend css,
        left: -100000
        position: "absolute"
+       display: "inline"
 
     # check the cache
     key = "#{text.length}--#{width}--#{height}--#{JSON.stringify(css)}"
@@ -127,30 +131,27 @@ class util.Textsize
     
 
     body = document.getElementsByTagName("body")[0]
-    div = document.createElement("div")
+    div = document.createElement("span")
+    div.textContent = text
     $(div)
       .css(css)
-      .attr(
-        width: width
-        height: height)
-      .text(text)
+      .attr(css)
 
     el = body unless el?
     el.appendChild div
 
-
     dim = {w: width, h: height}
-    size = 100
+    size = 10
     n = 0
-    while n < 100
+    while n < 30
       n += 1
-      if util.Textsize.larger div, size, dim
+      if util.Textsize.larger text, size, dim, div
          if size > 50
            size /= 2
          else
            size -= 1
       else
-         if util.Textsize.larger div, size + 1, dim
+         if util.Textsize.larger text, size + 1, dim, div
            break
          size += 5
 
@@ -158,7 +159,14 @@ class util.Textsize
     @_fontSizeCache[key] = size
     size
 
-  # allow chopping up the string
+  # Given a target width and height, return the optimal string and font-size
+  # that fits
+  #
+  # Allowed operations
+  #
+  # * reduce font size
+  # * chop text
+  #
   @fit: (text="", width, height, minfont, opts={}, el) ->
     optsize = @fontSize text, width, height, opts
     nchar = text.length
