@@ -17,6 +17,8 @@ class util.Util
   # uniformly pick n items from array
   @sample: (array, n=null) ->
     return array unless n?
+    return [] unless array?
+    return array unless array.length > 0
     blocksize = Math.ceil(array.length / n)
     nblocks = Math.floor(array.length / blocksize)
     _.times nblocks, (block) -> array[block*blocksize]

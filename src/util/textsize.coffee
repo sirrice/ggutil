@@ -75,7 +75,7 @@ class util.Textsize
       ret
     catch error
       log.warn "default texts: #{text}\t  err: #{error}"
-      @defaultSize text, opts['font-size']
+      util.Textsize.defaultSize text, opts['font-size']
 
   # @param opts css attributes
   # @return {width: [pixels], height: [pixels]}
@@ -103,7 +103,7 @@ class util.Textsize
       if sw? and sh?
         return sw > dims.w or sh > dims.h
     
-    ds = @defaultSize text, "#{size}pt"
+    ds = util.Textsize.defaultSize text, "#{size}pt"
     ds.w > dims.w or ds.h > dims.h
 
 
@@ -206,10 +206,10 @@ class util.Textsize
     texts = _.flatten [texts]
     texts = _.map texts, String
 
-    fonts = _.map texts, (text) ->
-      util.Textsize.fit text, w, h, minfont, opts, el
-
-    minfont = _.min fonts, (f) -> f.size
+    longestText = _.max texts, (text) -> text.length
+    minfont = util.Textsize.fit(
+      longestText, w, h, minfont, opts, el
+    )
     minsize = minfont.size
     nchar = minfont.nchar
 
