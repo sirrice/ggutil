@@ -40,7 +40,8 @@ class util.Util
       o = o[col]
     o
 
-  @isValid: (v) -> not(_.isNull(v) or _.isNaN(v) or _.isUndefined(v))
+  @isValid: (v) ->
+    not(_.isNull(v) or _.isNaN(v) or _.isUndefined(v))
 
   # @param f returns an array [key, val]
   #        that sets the map's key, value pair

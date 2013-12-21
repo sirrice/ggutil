@@ -9,7 +9,7 @@ class util.layout.Anneal
 
   # @param boxes list of [ [x0, x1], [y0, y1] ] arrays
   # @return same list of boxes but with optimized x0, x1, y0, y1 vals
-  @anneal: (boxes, bFast, innerLoop=10, T=2.4) ->
+  @anneal: (boxes, T, bFast, innerLoop) ->
     anneal = new util.layout.Anneal boxes, T, bFast, innerLoop
     anneal.anneal()
 
