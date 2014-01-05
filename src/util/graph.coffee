@@ -26,7 +26,7 @@ class util.Graph
     @id2node[id] = node
     @pid2cid[id] = {}  # store it as an associative map
     @cid2pid[id] = {}
-    @log "add\t#{node} with id #{id}"
+    @log "add id #{id}"
     @
 
   rm: (node) ->
@@ -41,7 +41,7 @@ class util.Graph
     delete @pid2cid[id]
     delete @cid2pid[id]
     delete @id2node[id]
-    @log "rm\t#{node} with id #{id}"
+    @log "rm id #{id}"
     @
 
 
@@ -169,6 +169,7 @@ class util.Graph
     ret = false
     check = (n) =>
       ret = ret or (@idFunc(n) == @idFunc(desc))
+      no
     @dfs check, node
     ret
 
@@ -198,13 +199,13 @@ class util.Graph
     json =
       nodes: nodes
       links: links
-      idFunc: util.Util.toJSON @idFunc
+      idFunc: util.Json.toJSON @idFunc
     json
 
 
   # @param json2edge (linkjson, graph object) -> [fromnode, tonode, type, metadata]
   @fromJSON: (json, json2node, json2edge) ->
-    idFunc = util.Util.fromJSON json.idFunc
+    idFunc = util.Json.fromJSON json.idFunc
     graph = new util.Graph idFunc
 
     nodes = _.map json.nodes, json2node
@@ -257,20 +258,33 @@ class util.Graph
   #           depth is the node's depth
   # @params node the node to start searching from
   #
-  dfs: (f, node=null, seen=null, depth=0) ->
-    seen ?= {} 
+  dfs: (f, node=null, type=null, nextf=null) ->
+    sources = []
+    nextf ?= (n) => @children n, type
 
     if node?
-      id = @idFunc node
-      return if id of seen
-      seen[id] = yes
-      f node, depth
-
-      _.each @children(node), (child) =>
-        @dfs f, child, seen, depth+1
+      sources = _.flatten [node]
     else
-      _.each @sources(), (child) =>
-        @dfs f, child, seen, depth+1
+      sources = @sources()
+
+    for source in sources
+      @dfs_ f, [source], {}, nextf
+
+  dfs_: (f, path, seen, nextf) ->
+    if path.length == 0
+      return
+    cur = path[path.length-1]
+    id = @idFunc cur
+    return if id of seen
+    seen[id] = yes
+
+    if f cur, path
+      return
+
+    for child in nextf cur
+      path.push child
+      @dfs_ f, path, seen, nextf
+      path.pop()
 
 
 
