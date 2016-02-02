@@ -40,6 +40,12 @@ class util.Util
       o = o[col]
     o
 
+  # @return true if collection1 is subseteq of collection2
+  @isSubset: (collection1, collection2) ->
+    len1 = collection1.length
+    (len1 <= collection2.length and
+     _.intersection(collection1, collection2).length == len1)
+
   @isValid: (v) ->
     not(_.isNull(v) or _.isNaN(v) or _.isUndefined(v))
 
@@ -144,6 +150,7 @@ _.mixin
   mmax: util.Util.max
   findGood: util.Util.findGood
   findGoodAttr: util.Util.findGoodAttr
+  isSubset: util.Util.isSubset
   isType: util.Util.isSubclass
   subSvg: util.Util.subSvg
   repeat: util.Util.repeat

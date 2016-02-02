@@ -1,5 +1,3 @@
-#<< gg/pos/position
-
 class util.layout.Anneal 
   constructor: (@boxes, @T=2.4, @bFast=yes, @innerLoop=10) ->
     @setup()
